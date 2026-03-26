@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BGM Player</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Child-only overrides not in style.css */
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
+  </style>
+</head>
+<body class="child-body">
+
+  <!-- Initial unlock overlay (autoplay policy) -->
+  <div class="start-overlay" id="startOverlay">
+    <button class="start-btn" id="startBtn">タップして開始</button>
+  </div>
+
+  <!-- Main display -->
+  <div class="child-display">
+    <div class="track-title" id="trackTitle"></div>
+  </div>
+
+  <!-- Hidden audio element -->
+  <audio id="audioPlayer" preload="none"></audio>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="child.js"></script>
+</body>
+</html>
