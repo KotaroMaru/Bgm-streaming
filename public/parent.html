@@ -10,90 +10,236 @@
 
   <div class="parent-container">
 
-    <!-- Header -->
-    <header class="p-header">
-      <h1 class="p-header__title">BGM コントロール</h1>
-      <div class="child-badge" id="childStatus">
-        <span class="child-badge__dot"></span>
-        <span class="child-badge__text">未接続</span>
-      </div>
-    </header>
+    <!-- ── Tab bar (top) ────────────────────────────────────── -->
+    <nav class="tab-bar">
+      <button class="tab-btn is-active" data-tab="play">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+        <span>再生</span>
+      </button>
+      <button class="tab-btn" data-tab="playlist">
+        <svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>
+        <span>リスト</span>
+      </button>
+      <button class="tab-btn" data-tab="library">
+        <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6zm-2 16c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
+        <span>ライブラリ</span>
+      </button>
+      <button class="tab-btn" data-tab="settings">
+        <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+        <span>設定</span>
+      </button>
+    </nav>
 
-    <!-- Now Playing -->
-    <section class="now-playing card">
-      <div class="now-playing__title" id="nowPlayingTitle">—</div>
-      <div class="now-playing__time">
-        <span id="currentTime">0:00</span>
-        <div class="seek-bar-wrap">
-          <div class="seek-bar-bg">
-            <div class="seek-bar-fill" id="seekFill"></div>
+    <!-- ══════════════════════════════════════════════════════ -->
+    <!-- TAB: 再生                                              -->
+    <!-- ══════════════════════════════════════════════════════ -->
+    <div class="tab-panel is-active" id="tab-play">
+
+      <header class="p-header">
+        <h1 class="p-header__title">BGM</h1>
+        <div class="child-badge" id="childStatus">
+          <span class="child-badge__dot"></span>
+          <span class="child-badge__text">未接続</span>
+        </div>
+      </header>
+
+      <!-- Now Playing -->
+      <section class="now-playing card">
+        <div class="now-playing__playlist" id="nowPlaylistName">プレイリスト未選択</div>
+        <div class="now-playing__title" id="nowPlayingTitle">—</div>
+        <div class="now-playing__time">
+          <span id="currentTime">0:00</span>
+          <div class="seek-bar-wrap">
+            <div class="seek-bar-bg"><div class="seek-bar-fill" id="seekFill"></div></div>
+            <input type="range" class="seek-bar-range" id="seekRange" min="0" max="100" value="0" step="0.1">
           </div>
-          <input type="range" class="seek-bar-range" id="seekRange" min="0" max="100" value="0" step="0.1">
+          <span id="durationTime">0:00</span>
         </div>
-        <span id="durationTime">0:00</span>
-      </div>
-    </section>
+      </section>
 
-    <!-- Controls -->
-    <section class="controls card">
-      <div class="controls__row controls__row--main">
-        <button class="ctrl-btn" id="btnPrev" aria-label="前の曲">
-          <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
-        </button>
-        <button class="ctrl-btn ctrl-btn--play" id="btnPlay" aria-label="再生">
-          <svg class="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-          <svg class="icon-pause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-        </button>
-        <button class="ctrl-btn" id="btnNext" aria-label="次の曲">
-          <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zm2-8.14 5.32 2.14L8 14.14V9.86zM16 6h2v12h-2z"/></svg>
-        </button>
-      </div>
-
-      <div class="controls__row controls__row--sub">
-        <button class="ctrl-btn ctrl-btn--sm toggle-btn" id="btnShuffle" aria-label="シャッフル">
-          <svg viewBox="0 0 24 24"><path d="M10.59 9.17 5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>
-        </button>
-        <button class="ctrl-btn ctrl-btn--sm toggle-btn loop-btn" id="btnLoop" aria-label="ループ" data-loop="none">
-          <svg class="icon-loop-all" viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4zm-4-2V9h-1l-2 1v1h1.5v4H13z"/></svg>
-          <svg class="icon-loop-one" viewBox="0 0 24 24" style="display:none"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4zm-4-2V9h-1l-2 1v1h1.5v4H13z"/></svg>
-        </button>
-      </div>
-
-      <div class="volume-row">
-        <svg class="volume-icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
-        <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="100">
-        <span class="volume-label" id="volumeLabel">100%</span>
-      </div>
-    </section>
-
-    <!-- Upload -->
-    <section class="upload-section card">
-      <h2 class="section-title">アップロード <small class="note">（最大 50 MB）</small></h2>
-      <div class="upload-area" id="uploadArea">
-        <input type="file" id="fileInput" accept="audio/*" multiple>
-        <label for="fileInput" class="upload-label">
-          <svg viewBox="0 0 24 24" class="upload-icon"><path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
-          <span>ファイルを選択 または ドロップ</span>
-          <span class="upload-hint">MP3 · AAC · FLAC · WAV</span>
-        </label>
-      </div>
-      <div class="progress-wrap" id="progressWrap" style="display:none">
-        <div class="progress-bg">
-          <div class="progress-fill" id="progressFill"></div>
+      <!-- Controls -->
+      <section class="controls card">
+        <div class="controls__row controls__row--main">
+          <button class="ctrl-btn" id="btnPrev" aria-label="前の曲">
+            <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+          </button>
+          <button class="ctrl-btn ctrl-btn--play" id="btnPlay" aria-label="再生">
+            <svg class="icon-play" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            <svg class="icon-pause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+          </button>
+          <button class="ctrl-btn" id="btnNext" aria-label="次の曲">
+            <svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zm2-8.14 5.32 2.14L8 14.14V9.86zM16 6h2v12h-2z"/></svg>
+          </button>
         </div>
-        <span class="progress-label" id="progressLabel">0%</span>
-      </div>
-    </section>
 
-    <!-- Playlist -->
-    <section class="playlist-section card">
-      <h2 class="section-title">プレイリスト <span class="track-count" id="trackCount">0</span>曲</h2>
-      <ul class="playlist" id="playlist">
-        <li class="playlist-empty" id="playlistEmpty">曲がありません</li>
-      </ul>
-    </section>
+        <div class="controls__row controls__row--sub">
+          <button class="ctrl-btn ctrl-btn--sm toggle-btn" id="btnShuffle" aria-label="シャッフル">
+            <svg viewBox="0 0 24 24"><path d="M10.59 9.17 5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>
+          </button>
+
+          <!-- Loop: none / one / all -->
+          <button class="ctrl-btn ctrl-btn--sm loop-btn" id="btnLoop" aria-label="ループ" data-loop="none">
+            <span class="loop-label">OFF</span>
+          </button>
+        </div>
+
+        <div class="volume-row">
+          <svg class="volume-icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+          <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="100">
+          <span class="volume-label" id="volumeLabel">100%</span>
+        </div>
+      </section>
+
+    </div><!-- /#tab-play -->
+
+    <!-- ══════════════════════════════════════════════════════ -->
+    <!-- TAB: プレイリスト                                      -->
+    <!-- ══════════════════════════════════════════════════════ -->
+    <div class="tab-panel" id="tab-playlist">
+
+      <!-- Playlist selector + create -->
+      <section class="card">
+        <h2 class="section-title">プレイリスト</h2>
+
+        <div class="playlist-create-row">
+          <input type="text" class="text-input" id="newPlaylistName" placeholder="新しいプレイリスト名" maxlength="40">
+          <button class="btn-primary btn-sm" id="btnCreatePlaylist">作成</button>
+        </div>
+
+        <ul class="playlist-selector" id="playlistSelector">
+          <li class="ps-empty">プレイリストがありません</li>
+        </ul>
+      </section>
+
+      <!-- Active playlist tracks -->
+      <section class="card" id="activePlaylistSection" style="display:none">
+        <div class="active-pl-header">
+          <h2 class="section-title" id="activePlaylistTitle">—</h2>
+          <span class="track-count" id="plTrackCount">0曲</span>
+        </div>
+        <ul class="playlist" id="plTrackList">
+          <li class="playlist-empty">曲がありません。ライブラリから追加してください。</li>
+        </ul>
+      </section>
+
+    </div><!-- /#tab-playlist -->
+
+    <!-- ══════════════════════════════════════════════════════ -->
+    <!-- TAB: ライブラリ                                        -->
+    <!-- ══════════════════════════════════════════════════════ -->
+    <div class="tab-panel" id="tab-library">
+
+      <!-- Upload -->
+      <section class="upload-section card">
+        <h2 class="section-title">アップロード <small class="note">（最大 50 MB）</small></h2>
+        <div class="upload-area" id="uploadArea">
+          <input type="file" id="fileInput" accept="audio/*" multiple>
+          <label for="fileInput" class="upload-label">
+            <svg viewBox="0 0 24 24" class="upload-icon"><path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
+            <span>ファイルを選択 または ドロップ</span>
+            <span class="upload-hint">MP3 · AAC · FLAC · WAV</span>
+          </label>
+        </div>
+        <div class="progress-wrap" id="progressWrap" style="display:none">
+          <div class="progress-bg"><div class="progress-fill" id="progressFill"></div></div>
+          <span class="progress-label" id="progressLabel">0%</span>
+        </div>
+      </section>
+
+      <!-- Library list -->
+      <section class="card">
+        <h2 class="section-title">ライブラリ <span class="track-count" id="libraryCount">0曲</span></h2>
+        <ul class="library-list" id="libraryList">
+          <li class="playlist-empty">曲がありません</li>
+        </ul>
+      </section>
+
+    </div><!-- /#tab-library -->
+
+    <!-- ══════════════════════════════════════════════════════ -->
+    <!-- TAB: 設定（フォント）                                  -->
+    <!-- ══════════════════════════════════════════════════════ -->
+    <div class="tab-panel" id="tab-settings">
+
+      <section class="card">
+        <h2 class="section-title">子側表示フォント</h2>
+
+        <!-- Font type toggle -->
+        <div class="font-type-toggle">
+          <button class="toggle-pill is-active" id="fontTypeGoogle" data-type="google">Google Fonts</button>
+          <button class="toggle-pill" id="fontTypeCustom" data-type="custom">カスタムフォント</button>
+        </div>
+
+        <!-- Google Fonts panel -->
+        <div id="googleFontPanel">
+          <input type="text" class="text-input" id="fontSearch" placeholder="フォント名を検索...">
+          <ul class="font-list" id="fontList"></ul>
+        </div>
+
+        <!-- Custom font panel -->
+        <div id="customFontPanel" style="display:none">
+          <div class="upload-area upload-area--sm" id="fontUploadArea">
+            <input type="file" id="fontFileInput" accept=".ttf,.otf,.woff,.woff2">
+            <label for="fontFileInput" class="upload-label">
+              <span>フォントファイルを選択</span>
+              <span class="upload-hint">.ttf · .otf · .woff · .woff2（最大 20 MB）</span>
+            </label>
+          </div>
+          <div class="progress-wrap" id="fontProgressWrap" style="display:none">
+            <div class="progress-bg"><div class="progress-fill" id="fontProgressFill"></div></div>
+            <span class="progress-label" id="fontProgressLabel">0%</span>
+          </div>
+          <ul class="font-list" id="customFontList">
+            <li class="playlist-empty" id="customFontEmpty">アップロード済みフォントがありません</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Text style settings -->
+      <section class="card">
+        <h2 class="section-title">テキストスタイル</h2>
+
+        <div class="setting-row">
+          <label class="setting-label">フォントサイズ</label>
+          <div class="setting-control">
+            <input type="range" class="volume-slider" id="fontSizeSlider" min="16" max="200" value="64">
+            <span class="volume-label" id="fontSizeLabel">64px</span>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <label class="setting-label">文字色</label>
+          <div class="setting-control">
+            <input type="color" id="fontColorPicker" value="#ffffff" class="color-picker">
+            <span class="volume-label" id="fontColorLabel">#ffffff</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Preview -->
+      <section class="card font-preview-card">
+        <h2 class="section-title">プレビュー</h2>
+        <div class="font-preview" id="fontPreview">
+          <span id="fontPreviewText">曲名サンプル / Sample Text</span>
+        </div>
+      </section>
+
+      <!-- Apply button -->
+      <button class="btn-primary btn-full" id="btnApplyFont">子側に適用する</button>
+
+    </div><!-- /#tab-settings -->
 
   </div><!-- /.parent-container -->
+
+  <!-- Add to playlist modal -->
+  <div class="modal-overlay" id="addToPlaylistModal" style="display:none">
+    <div class="modal">
+      <h3 class="modal__title">プレイリストに追加</h3>
+      <p class="modal__track-name" id="modalTrackName"></p>
+      <ul class="modal__list" id="modalPlaylistList"></ul>
+      <button class="btn-ghost btn-full" id="modalClose">キャンセル</button>
+    </div>
+  </div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="parent.js"></script>

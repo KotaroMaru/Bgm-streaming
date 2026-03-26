@@ -1,41 +1,40 @@
-/* ── State ──────────────────────────────────────────────────────────────────── */
-let playlist = [];
+// ── State ────────────────────────────────────────────────────────────────────
+let activeTracks = [];
+let loopMode = 'none'; // 'none' | 'one' | 'all'
 let audioUnlocked = false;
-let pendingAction = null; // { type: 'play', index, currentTime } – queued before unlock
-let loopMode = 'none'; // 'none' | 'all' | 'one'
+let pendingPlay = null; // { index, currentTime } queued before unlock
 
 const audio = document.getElementById('audioPlayer');
 const trackTitleEl = document.getElementById('trackTitle');
 
-/* ── Keep Render awake ──────────────────────────────────────────────────────── */
+// ── Keep Render awake ─────────────────────────────────────────────────────────
 setInterval(() => fetch('/ping').catch(() => {}), 5 * 60 * 1000);
 
-/* ── Socket.io (connect only after user tap) ────────────────────────────────── */
+// ── Socket.io (connect only after user tap) ───────────────────────────────────
 const socket = io({ autoConnect: false });
 let reconnectTimer = null;
 
 socket.on('connect', () => {
-  console.log('Connected:', socket.id);
   clearTimeout(reconnectTimer);
   reconnectTimer = null;
   socket.emit('register', 'child');
 });
 
 socket.on('disconnect', () => {
-  console.log('Disconnected. Reconnecting in 3 s…');
   reconnectTimer = setTimeout(() => socket.connect(), 3000);
 });
 
 socket.on('connect_error', () => {
+  clearTimeout(reconnectTimer);
   reconnectTimer = setTimeout(() => socket.connect(), 3000);
 });
 
-/* ── Initial unlock button ──────────────────────────────────────────────────── */
+// ── Initial unlock ────────────────────────────────────────────────────────────
 document.getElementById('startBtn').addEventListener('click', () => {
   audioUnlocked = true;
   document.getElementById('startOverlay').style.display = 'none';
 
-  // Prime the audio context with a silent play to unlock autoplay
+  // Unlock audio context with silent WAV
   audio.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
   audio.play().catch(() => {}).finally(() => {
     audio.src = '';
@@ -43,23 +42,24 @@ document.getElementById('startBtn').addEventListener('click', () => {
   });
 });
 
-/* ── Sync on (re)connect ────────────────────────────────────────────────────── */
-socket.on('sync', ({ playlist: pl, playState }) => {
-  playlist = pl;
-  loopMode = playState.loop ?? 'none';
+// ── Sync on (re)connect ───────────────────────────────────────────────────────
+socket.on('sync', ({ activeTracks: tracks, playState, fontSettings }) => {
+  activeTracks = tracks || [];
+  applyLoopMode(playState.loop ?? 'none');
   audio.volume = playState.volume ?? 1;
+  applyFontSettings(fontSettings);
 
   if (playState.isPlaying && playState.currentIndex >= 0) {
     execPlay(playState.currentIndex, playState.currentTime ?? 0);
   }
 });
 
-/* ── Playlist updates ────────────────────────────────────────────────────────── */
-socket.on('playlist_updated', (pl) => {
-  playlist = pl;
+// ── Active tracks update ──────────────────────────────────────────────────────
+socket.on('active_tracks_updated', (tracks) => {
+  activeTracks = tracks || [];
 });
 
-/* ── Playback commands ───────────────────────────────────────────────────────── */
+// ── Playback commands ─────────────────────────────────────────────────────────
 socket.on('play', ({ index, currentTime = 0 }) => {
   execPlay(index, currentTime);
 });
@@ -78,20 +78,23 @@ socket.on('volume', ({ volume }) => {
 });
 
 socket.on('loop_mode', ({ loop }) => {
-  loopMode = loop;
+  applyLoopMode(loop);
 });
 
 socket.on('state_updated', (state) => {
   audio.volume = state.volume ?? 1;
-  loopMode = state.loop ?? 'none';
+  applyLoopMode(state.loop ?? 'none');
 });
 
-/* ── Play a track by index ──────────────────────────────────────────────────── */
-function execPlay(index, startTime) {
-  if (index < 0 || index >= playlist.length) return;
-  const track = playlist[index];
+socket.on('font_updated', (settings) => {
+  applyFontSettings(settings);
+});
 
-  audio.src = track.url;
+// ── Play track by index ───────────────────────────────────────────────────────
+function execPlay(index, startTime) {
+  if (index < 0 || index >= activeTracks.length) return;
+  const track = activeTracks[index];
+  audio.src = track.cloudinaryUrl;
   audio.currentTime = startTime || 0;
   audio.play().catch((err) => console.warn('Play blocked:', err));
   setTitle(track.name);
@@ -101,11 +104,19 @@ function setTitle(name) {
   trackTitleEl.textContent = name ?? '';
 }
 
-/* ── Audio event → server ────────────────────────────────────────────────────── */
+// ── Loop mode ─────────────────────────────────────────────────────────────────
+function applyLoopMode(mode) {
+  loopMode = mode;
+  // 'one' loop is handled natively by audio.loop = true.
+  // This prevents the 'ended' event from firing, so the server never advances.
+  audio.loop = (mode === 'one');
+}
+
+// ── Audio callbacks ───────────────────────────────────────────────────────────
 let lastTimeEmit = 0;
 audio.addEventListener('timeupdate', () => {
   const now = Date.now();
-  if (now - lastTimeEmit < 900) return; // throttle to ~1/sec
+  if (now - lastTimeEmit < 900) return;
   lastTimeEmit = now;
   socket.emit('time_update', {
     currentTime: audio.currentTime,
@@ -113,12 +124,54 @@ audio.addEventListener('timeupdate', () => {
   });
 });
 
+// Only fires when audio.loop === false (i.e., loopMode !== 'one')
 audio.addEventListener('ended', () => {
   socket.emit('track_ended');
 });
 
-// On error, notify server so it can advance the playlist
 audio.addEventListener('error', () => {
   console.warn('Audio error on track:', audio.src);
   socket.emit('track_ended');
 });
+
+// ── Font settings ─────────────────────────────────────────────────────────────
+function applyFontSettings(settings) {
+  if (!settings) return;
+  trackTitleEl.style.fontSize = `${settings.fontSize ?? 64}px`;
+  trackTitleEl.style.color = settings.color ?? '#ffffff';
+
+  if (settings.type === 'google') {
+    loadGoogleFont(settings.googleFontName);
+    trackTitleEl.style.fontFamily = `'${settings.googleFontName}', sans-serif`;
+  } else if (settings.type === 'custom' && settings.customFontUrl) {
+    loadCustomFont(settings.customFontUrl);
+    trackTitleEl.style.fontFamily = "'ChildCustomFont', sans-serif";
+  }
+}
+
+function loadGoogleFont(name) {
+  if (!name) return;
+  const id = `gfont-${name.replace(/\s+/g, '-')}`;
+  if (document.getElementById(id)) return;
+  const link = document.createElement('link');
+  link.id = id;
+  link.rel = 'stylesheet';
+  link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(name)}&display=swap`;
+  document.head.appendChild(link);
+}
+
+function loadCustomFont(url) {
+  let style = document.getElementById('child-custom-font');
+  if (!style) {
+    style = document.createElement('style');
+    style.id = 'child-custom-font';
+    document.head.appendChild(style);
+  }
+  style.textContent = `@font-face { font-family: 'ChildCustomFont'; src: url('${url}'); }`;
+}
+
+// ── Load font settings on page open ──────────────────────────────────────────
+fetch('/settings/font')
+  .then((r) => r.json())
+  .then((s) => applyFontSettings(s))
+  .catch(() => {});
