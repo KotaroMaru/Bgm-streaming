@@ -131,13 +131,13 @@
 
       <!-- Upload -->
       <section class="upload-section card">
-        <h2 class="section-title">アップロード <small class="note">（最大 50 MB）</small></h2>
+        <h2 class="section-title">アップロード <small class="note">（最大 500 MB）</small></h2>
         <div class="upload-area" id="uploadArea">
-          <input type="file" id="fileInput" accept="audio/*" multiple>
+          <input type="file" id="fileInput" accept="audio/*,video/mp4" multiple>
           <label for="fileInput" class="upload-label">
             <svg viewBox="0 0 24 24" class="upload-icon"><path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/></svg>
             <span>ファイルを選択 または ドロップ</span>
-            <span class="upload-hint">MP3 · AAC · FLAC · WAV</span>
+            <span class="upload-hint">MP3 · AAC · FLAC · WAV · MP4（音声抽出）</span>
           </label>
         </div>
         <div class="progress-wrap" id="progressWrap" style="display:none">

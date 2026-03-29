@@ -481,12 +481,12 @@ uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.
 uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('is-drag-over'));
 uploadArea.addEventListener('drop', async (e) => {
   e.preventDefault(); uploadArea.classList.remove('is-drag-over');
-  const files = [...e.dataTransfer.files].filter((f) => f.type.startsWith('audio/'));
+  const files = [...e.dataTransfer.files].filter((f) => f.type.startsWith('audio/') || f.type === 'video/mp4');
   for (const f of files) await uploadAudioFile(f);
 });
 
 async function uploadAudioFile(file) {
-  if (file.size > 50 * 1024 * 1024) { alert(`"${file.name}" は 50 MB を超えています。`); return; }
+  if (file.size > 500 * 1024 * 1024) { alert(`"${file.name}" は 500 MB を超えています。`); return; }
   setProgress('progressWrap', 'progressFill', 'progressLabel', 0, file.name);
   document.getElementById('progressWrap').style.display = 'flex';
 

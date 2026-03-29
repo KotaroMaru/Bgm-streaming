@@ -7,6 +7,8 @@ const cloudinary = require('cloudinary').v2;
 const multer = require('multer');
 const path = require('path');
 const crypto = require('crypto');
+const { spawn } = require('child_process');
+const ffmpegPath = require('ffmpeg-static');
 
 // ── Cloudinary ───────────────────────────────────────────────────────────────
 cloudinary.config({
@@ -144,13 +146,40 @@ async function loadLibraryFromCloudinary() {
   }
 }
 
+// ── MP4 audio extraction ──────────────────────────────────────────────────────
+function extractAudioFromMp4(buffer) {
+  return new Promise((resolve, reject) => {
+    const ff = spawn(ffmpegPath, [
+      '-i', 'pipe:0',
+      '-vn',
+      '-acodec', 'libmp3lame',
+      '-q:a', '2',
+      '-f', 'mp3',
+      'pipe:1',
+    ]);
+
+    const chunks = [];
+    ff.stdout.on('data', (chunk) => chunks.push(chunk));
+    ff.stderr.on('data', () => {}); // suppress ffmpeg log output
+
+    ff.on('close', (code) => {
+      if (code !== 0) return reject(new Error(`ffmpeg exited with code ${code}`));
+      resolve(Buffer.concat(chunks));
+    });
+    ff.on('error', reject);
+
+    ff.stdin.write(buffer);
+    ff.stdin.end();
+  });
+}
+
 // ── Multer instances ──────────────────────────────────────────────────────────
 const audioUpload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 50 * 1024 * 1024 },
+  limits: { fileSize: 500 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
-    if (file.mimetype.startsWith('audio/')) cb(null, true);
-    else cb(new Error('音声ファイルのみアップロード可能です'), false);
+    if (file.mimetype.startsWith('audio/') || file.mimetype === 'video/mp4') cb(null, true);
+    else cb(new Error('音声ファイルまたは MP4 動画のみアップロード可能です'), false);
   },
 });
 
@@ -198,8 +227,18 @@ app.post('/upload', audioUpload.single('file'), async (req, res) => {
   }
   displayName = displayName.replace(/\.[^/.]+$/, '');
 
+  let uploadBuffer = req.file.buffer;
+  if (req.file.mimetype === 'video/mp4') {
+    try {
+      uploadBuffer = await extractAudioFromMp4(req.file.buffer);
+    } catch (err) {
+      console.error('MP4 audio extraction error:', err);
+      return res.status(500).json({ error: 'MP4 から音声の抽出に失敗しました' });
+    }
+  }
+
   try {
-    const result = await uploadStreamAsync(req.file.buffer, {
+    const result = await uploadStreamAsync(uploadBuffer, {
       resource_type: 'video',
       folder: 'bgm',
       context: `caption=${displayName}`,
